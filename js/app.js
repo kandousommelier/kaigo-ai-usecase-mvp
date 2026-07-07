@@ -79,9 +79,29 @@
   function updateSubmit(){ const ok=copied.prompt&&copied.plan&&$("privacy-confirmation")?.checked; $("submit-button").disabled=!ok; }
   function toast(msg){ let t=$("toast"); if(!t){t=document.createElement("div");t.id="toast";t.className="toast";document.body.append(t);} t.textContent=msg;t.classList.add("is-visible");setTimeout(()=>t.classList.remove("is-visible"),2200); }
   function receipt(){const d=new Date(), y=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;return `AX-${y}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(0,6).toUpperCase()}`;}
-  async function submit(){ const status=$("submit-status"); if(!CFG.supabaseUrl||!CFG.supabaseAnonKey){status.textContent="Supabaseの接続設定がありません。入力内容は消去していません。";return;} $("submit-button").disabled=true;status.textContent="送信しています…";
-    try{const client=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey), no=receipt(); const {error}=await client.from(CFG.tableName||"ai_usecase_submissions").insert({receipt_number:no,app_version:CFG.appVersion||"0.1.0",service_type:data.serviceType,role_type:data.roleType,work_category:data.workCategory,ai_prompt:output.prompt,action_plan:output.plan,answers:data,status:"new"}); if(error) throw error; data=blank();output={prompt:"",plan:""};$("receipt-number").textContent=no;show("complete");}
-    catch(e){console.error(e);status.textContent="送信できませんでした。入力内容は残っています。時間をおいて再送してください。";updateSubmit();}
+  async function submit(){
+    const status=$("submit-status");
+    if(!CFG.supabaseUrl||!CFG.supabaseAnonKey){status.textContent="Supabaseの接続設定がありません。入力内容は消去していません。";return;}
+    $("submit-button").disabled=true;
+    status.textContent="送信しています…";
+    try{
+      const client=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{
+        auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+      });
+      const no=receipt();
+      const {error}=await client.from(CFG.tableName||"ai_usecase_submissions").insert({receipt_number:no,app_version:CFG.appVersion||"0.1.0",service_type:data.serviceType,role_type:data.roleType,work_category:data.workCategory,ai_prompt:output.prompt,action_plan:output.plan,answers:data,status:"new"});
+      if(error) throw error;
+      data=blank();
+      output={prompt:"",plan:""};
+      $("receipt-number").textContent=no;
+      show("complete");
+    }
+    catch(e){
+      console.error(e);
+      const code=e?.code ? `（エラーコード：${e.code}）` : "";
+      status.textContent=`送信できませんでした${code}。入力内容は残っています。時間をおいて再送してください。`;
+      updateSubmit();
+    }
   }
   $("start-button").onclick=()=>{step=0;render();show("wizard")};
   $("back-button").onclick=()=>{capture();if(step>0){step--;render();}};
