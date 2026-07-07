@@ -50,9 +50,33 @@
     if(type==="trial") ok=!!data.trialScope&&!!data.trialPeriod;
     if(!ok) $("validation-message").textContent="選択または入力してから、次へ進んでください。"; return ok;
   }
-  function makeOutput(){ output=window.KAIGO_AI_GENERATOR.buildOutputs(data); $("ai-prompt").textContent=output.prompt; $("action-plan").textContent=output.plan; copied={prompt:false,plan:false}; $("copied-confirmation").checked=false; $("privacy-confirmation").checked=false; updateSubmit(); show("result"); }
-  async function copy(text,kind){ try{await navigator.clipboard.writeText(text);}catch{const t=document.createElement("textarea");t.value=text;document.body.append(t);t.select();document.execCommand("copy");t.remove();} if(kind==="all") copied={prompt:true,plan:true}; else copied[kind]=true; toast("コピーしました。ご自身の文書やメモへ保存してください。"); updateSubmit(); }
-  function updateSubmit(){ const ok=copied.prompt&&copied.plan&&$("copied-confirmation")?.checked&&$("privacy-confirmation")?.checked; $("submit-button").disabled=!ok; }
+  function makeOutput(){
+    output=window.KAIGO_AI_GENERATOR.buildOutputs(data);
+    $("ai-prompt").textContent=output.prompt;
+    $("action-plan").textContent=output.plan;
+    copied={prompt:false,plan:false};
+    $("copied-confirmation").checked=false;
+    $("copied-confirmation").disabled=true;
+    $("privacy-confirmation").checked=false;
+    $("submit-status").textContent="送信するには、依頼文と計画書をコピーしてください。";
+    updateSubmit();
+    show("result");
+  }
+  async function copy(text,kind){
+    try{await navigator.clipboard.writeText(text);}catch{const t=document.createElement("textarea");t.value=text;document.body.append(t);t.select();document.execCommand("copy");t.remove();}
+    if(kind==="all") copied={prompt:true,plan:true}; else copied[kind]=true;
+    const allCopied=copied.prompt&&copied.plan;
+    if(allCopied){
+      $("copied-confirmation").checked=true;
+      $("copied-confirmation").disabled=true;
+      $("submit-status").textContent="コピーが完了しました。個人情報が含まれていないことを確認してください。";
+    } else {
+      $("submit-status").textContent="もう一方の文書もコピーしてください。";
+    }
+    toast("コピーしました。ご自身の文書やメモへ保存してください。");
+    updateSubmit();
+  }
+  function updateSubmit(){ const ok=copied.prompt&&copied.plan&&$("privacy-confirmation")?.checked; $("submit-button").disabled=!ok; }
   function toast(msg){ let t=$("toast"); if(!t){t=document.createElement("div");t.id="toast";t.className="toast";document.body.append(t);} t.textContent=msg;t.classList.add("is-visible");setTimeout(()=>t.classList.remove("is-visible"),2200); }
   function receipt(){const d=new Date(), y=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;return `AX-${y}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(0,6).toUpperCase()}`;}
   async function submit(){ const status=$("submit-status"); if(!CFG.supabaseUrl||!CFG.supabaseAnonKey){status.textContent="Supabaseの接続設定がありません。入力内容は消去していません。";return;} $("submit-button").disabled=true;status.textContent="送信しています…";
@@ -66,7 +90,8 @@
   document.querySelectorAll("[data-copy-target]").forEach(b=>b.onclick=()=>copy($(b.dataset.copyTarget).textContent,b.dataset.copyTarget==="ai-prompt"?"prompt":"plan"));
   $("copy-all-button").onclick=()=>copy(`【AIへの依頼文】\n${output.prompt}\n\n【AI活用計画書】\n${output.plan}`,"all");
   $("print-button").onclick=()=>print();
-  $("copied-confirmation").onchange=updateSubmit; $("privacy-confirmation").onchange=updateSubmit; $("submit-button").onclick=submit;
+  $("privacy-confirmation").onchange=updateSubmit;
+  $("submit-button").onclick=submit;
   $("clear-button").onclick=()=>{if(confirm("入力内容を消去します。コピーして保存したことを確認してください。")){data=blank();output={prompt:"",plan:""};show("intro");}};
   $("restart-button").onclick=()=>{data=blank();step=0;show("intro")};
 })();
