@@ -76,7 +76,7 @@
     refreshTimer = setTimeout(refreshMap, 80);
   }
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  async function start(){
     if(!configured()) return;
     client = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
     const {data:{session}} = await client.auth.getSession();
@@ -86,9 +86,19 @@
       else facilityByReceipt.clear();
     });
 
-    const observer = new MutationObserver(scheduleRefresh);
-    observer.observe($("submission-list"), {childList:true});
-    observer.observe($("detail-content"), {childList:true});
-    $("refresh-button").addEventListener("click", () => setTimeout(refreshMap, 150));
-  });
+    const list = $("submission-list");
+    const detail = $("detail-content");
+    if(list && detail){
+      const observer = new MutationObserver(scheduleRefresh);
+      observer.observe(list, {childList:true});
+      observer.observe(detail, {childList:true});
+    }
+    $("refresh-button")?.addEventListener("click", () => setTimeout(refreshMap, 150));
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", start);
+  }else{
+    start();
+  }
 })();
