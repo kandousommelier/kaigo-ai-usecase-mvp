@@ -21,11 +21,12 @@ create table if not exists public.ai_usecase_submissions (
 alter table public.ai_usecase_submissions enable row level security;
 
 -- 公開利用者は新規送信だけできます。過去データの閲覧・更新・削除はできません。
+-- 管理者が同じブラウザでログイン済みでも送信テストできるよう、authenticatedにもINSERTを許可します。
 drop policy if exists "public can insert plans" on public.ai_usecase_submissions;
 create policy "public can insert plans"
 on public.ai_usecase_submissions
 for insert
-to anon
+to anon, authenticated
 with check (
   status = 'new'
   and char_length(ai_prompt) between 1 and 30000
@@ -57,7 +58,7 @@ to authenticated
 using (true);
 
 -- テーブル権限
-grant insert on table public.ai_usecase_submissions to anon;
+grant insert on table public.ai_usecase_submissions to anon, authenticated;
 grant select, update, delete on table public.ai_usecase_submissions to authenticated;
 
 -- 管理画面の一覧を速くするための索引
