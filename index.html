@@ -23,7 +23,37 @@
   </header>
 
   <main id="top" class="app-shell">
-    <section class="intro-card" id="intro-screen" aria-labelledby="intro-title">
+    <section class="access-card" id="access-screen" aria-labelledby="access-title">
+      <p class="eyebrow">伴走支援・関係事業所向け</p>
+      <h1 id="access-title">介護現場<br>AI活用計画づくり</h1>
+      <p class="access-copy">本アプリは、伴走支援の一環として提供している関係事業所向けサービスです。ご案内した情報を入力してご利用ください。</p>
+
+      <div class="notice notice-warning" role="note">
+        <p>利用者様や職員名、個別ケースの詳細など、個人が特定される情報は入力しないでください。</p>
+      </div>
+
+      <form id="access-form" class="access-form" novalidate>
+        <label>
+          <span>共通ID</span>
+          <input type="text" id="access-id" name="accessId" autocomplete="username" required>
+        </label>
+        <label>
+          <span>共通パスワード</span>
+          <input type="password" id="access-password" name="accessPassword" autocomplete="current-password" required>
+        </label>
+        <label>
+          <span>施設コード</span>
+          <input type="text" id="facility-code" name="facilityCode" placeholder="例：shiga04" maxlength="80" required>
+        </label>
+        <p class="field-note">施設コードは認証には使用しません。何か文字が入力されていれば入室できます。</p>
+        <button type="submit" class="primary-button large access-button" id="access-button" disabled>入室する</button>
+        <p class="form-message" id="access-message" role="alert" aria-live="polite"></p>
+      </form>
+
+      <p class="access-footnote">この画面は、限定提供サービスであることを確認するための簡易入口です。</p>
+    </section>
+
+    <section class="intro-card" id="intro-screen" hidden aria-labelledby="intro-title">
       <p class="eyebrow">AI CONSULTATION PLANNER</p>
       <h1 id="intro-title">職場を良くしたい気持ちを、<br><span>AIに相談できる形</span>にします。</h1>
       <p class="intro-copy">質問に順番に答えると、「AIへの依頼文」と「AI活用計画書」ができます。システム開発やAIの専門用語を知る必要はありません。</p>
