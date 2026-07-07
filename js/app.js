@@ -89,7 +89,9 @@
         auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
       });
       const no=receipt();
-      const {error}=await client.from(CFG.tableName||"ai_usecase_submissions").insert({receipt_number:no,app_version:CFG.appVersion||"0.1.0",service_type:data.serviceType,role_type:data.roleType,work_category:data.workCategory,ai_prompt:output.prompt,action_plan:output.plan,answers:data,status:"new"});
+      const facilityCode=sessionStorage.getItem("kaigoAiFacilityCode")||"";
+      const answers={...data,facilityCode};
+      const {error}=await client.from(CFG.tableName||"ai_usecase_submissions").insert({receipt_number:no,app_version:CFG.appVersion||"0.1.0",service_type:data.serviceType,role_type:data.roleType,work_category:data.workCategory,ai_prompt:output.prompt,action_plan:output.plan,answers,status:"new"});
       if(error) throw error;
       data=blank();
       output={prompt:"",plan:""};
