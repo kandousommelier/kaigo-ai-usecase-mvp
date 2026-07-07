@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="介護現場の困りごとを整理し、生成AIへ相談する依頼文とAI活用計画書を作るアプリです。">
+  <title>介護現場 AI活用計画づくり</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="js/config.js" defer></script>
+  <script src="js/questions.js" defer></script>
+  <script src="js/generator.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="最初の画面へ戻る">
+      <span class="brand-mark" aria-hidden="true">AI</span>
+      <span>介護現場 AI活用計画づくり</span>
+    </a>
+    <span class="header-note">専門用語なしで、AIへの相談準備</span>
+  </header>
+
+  <main id="top" class="app-shell">
+    <section class="intro-card" id="intro-screen" aria-labelledby="intro-title">
+      <p class="eyebrow">AI CONSULTATION PLANNER</p>
+      <h1 id="intro-title">職場を良くしたい気持ちを、<br><span>AIに相談できる形</span>にします。</h1>
+      <p class="intro-copy">質問に順番に答えると、「AIへの依頼文」と「AI活用計画書」ができます。システム開発やAIの専門用語を知る必要はありません。</p>
+
+      <div class="purpose-grid" aria-label="このアプリでできること">
+        <article><strong>1</strong><h2>困りごとを整理</h2><p>日頃の仕事で時間がかかることや、見直したいことを選びます。</p></article>
+        <article><strong>2</strong><h2>AIへの依頼文を作成</h2><p>ChatGPTなどへ、そのままコピーして相談できる文章を作ります。</p></article>
+        <article><strong>3</strong><h2>小さく試す計画を作成</h2><p>職員が確認することや、1週間程度で試す方法を整理します。</p></article>
+      </div>
+
+      <div class="notice notice-warning" role="note">
+        <h2>入力しないでください</h2>
+        <p>利用者様や職員の個人名、住所、電話番号、生年月日、病歴、個別ケースの詳しい内容など、個人を特定できる情報は入力しないでください。「利用者A」「職員B」などに置き換えてください。</p>
+      </div>
+
+      <div class="intro-actions">
+        <button type="button" class="primary-button large" id="start-button">計画づくりを始める</button>
+      </div>
+    </section>
+
+    <section class="wizard-card" id="wizard-screen" hidden aria-labelledby="wizard-title">
+      <div class="progress-wrap">
+        <div class="progress-label"><span id="progress-text">1 / 10</span><span id="save-state">この画面を閉じると入力内容は消えます</span></div>
+        <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+      </div>
+
+      <div id="question-container"></div>
+
+      <div class="wizard-actions">
+        <button type="button" class="secondary-button" id="back-button">前へ戻る</button>
+        <button type="button" class="primary-button" id="next-button">次へ進む</button>
+      </div>
+    </section>
+
+    <section class="result-card" id="result-screen" hidden aria-labelledby="result-title">
+      <div class="result-heading">
+        <div>
+          <p class="eyebrow">YOUR AI CONSULTATION PLAN</p>
+          <h1 id="result-title">AIに相談する準備ができました</h1>
+          <p>内容を確認し、必ずご自身でコピーして保存してください。</p>
+        </div>
+        <button type="button" class="secondary-button" id="edit-button">回答を修正する</button>
+      </div>
+
+      <div class="notice notice-important" role="note">
+        <h2>必ずコピーして保存してください</h2>
+        <p>本アプリでは、作業終了後に計画書を再表示できません。運営側へお問い合わせいただいても、過去の計画書の復元や提供には対応できません。</p>
+      </div>
+
+      <div class="output-grid">
+        <article class="output-card">
+          <div class="output-card-head">
+            <div><p class="section-kicker">COPY TO GENERATIVE AI</p><h2>AIへの依頼文</h2></div>
+            <button type="button" class="copy-button" data-copy-target="ai-prompt">依頼文をコピー</button>
+          </div>
+          <pre id="ai-prompt" class="output-text"></pre>
+        </article>
+
+        <article class="output-card">
+          <div class="output-card-head">
+            <div><p class="section-kicker">ACTION PLAN</p><h2>AI活用計画書</h2></div>
+            <button type="button" class="copy-button" data-copy-target="action-plan">計画書をコピー</button>
+          </div>
+          <pre id="action-plan" class="output-text"></pre>
+        </article>
+      </div>
+
+      <div class="result-tools">
+        <button type="button" class="secondary-button" id="copy-all-button">依頼文と計画書をまとめてコピー</button>
+        <button type="button" class="secondary-button" id="print-button">印刷する</button>
+      </div>
+
+      <section class="submit-panel" aria-labelledby="submit-title">
+        <h2 id="submit-title">運営者へ共有して終了</h2>
+        <p>送信された情報は運営側に一時的に保管されますが、定期的に削除します。後日、作成した計画書の再表示、復元またはデータ提供を求められても対応できません。</p>
+
+        <div class="check-list">
+          <label><input type="checkbox" id="copied-confirmation"> AIへの依頼文と計画書をコピーして保存しました</label>
+          <label><input type="checkbox" id="privacy-confirmation"> 個人を特定できる情報が含まれていないことを確認しました</label>
+        </div>
+
+        <div class="submit-actions">
+          <button type="button" class="primary-button large" id="submit-button" disabled>運営者へ送信して終了</button>
+          <button type="button" class="danger-link" id="clear-button">送信せず、内容を消去して終了</button>
+        </div>
+        <p class="submit-status" id="submit-status" role="status" aria-live="polite"></p>
+      </section>
+    </section>
+
+    <section class="complete-card" id="complete-screen" hidden aria-labelledby="complete-title">
+      <div class="complete-mark" aria-hidden="true">✓</div>
+      <h1 id="complete-title">送信が完了しました</h1>
+      <p>受付番号：<strong id="receipt-number"></strong></p>
+      <p>この端末の入力内容は消去しました。保存した依頼文を生成AIへ貼り付けて、改善案を相談してください。</p>
+      <button type="button" class="primary-button" id="restart-button">別の計画を作る</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>介護現場 AI活用計画づくり</p>
+    <p>職場の業務改善について、生成AIへ相談する準備を支援するアプリです。</p>
+    <p>利用者様や職員の個人情報は入力しないでください。</p>
+  </footer>
+</body>
+</html>
